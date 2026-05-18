@@ -182,284 +182,453 @@
         </div>
       </div>
 
-      <div class="chart-card">
-        <div class="chart-title">플랫폼별 가입 비율</div>
-        <div style="display:flex; align-items:center; gap:2rem; flex-wrap:wrap;">
-          <div style="position:relative; height:160px; width:160px; flex-shrink:0;">
-            <canvas id="platformChart" role="img" aria-label="플랫폼별 가입 비율"></canvas>
-          </div>
-          <div id="platformLegend" style="display:flex; flex-direction:column; gap:10px; font-size:13px; min-width:160px;"></div>
+      <div class="footer-note" id="lastUpdated"></div>
+    </div>
+  </div>
+
+
+  <!-- Admin Dashboard -->
+  <div class="dash" id="adminView" style="display:none;">
+    <div class="topbar">
+      <div class="topbar-logo">STATS <span style="font-size:13px;color:var(--muted);font-family:var(--font-body);margin-left:6px;">관리자</span></div>
+      <div class="topbar-right">
+        <div class="topbar-name">안녕하세요, <span id="adminName"></span>님</div>
+        <button class="btn-ghost" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+    <div class="main">
+
+      <div class="filterbar">
+        <label>인플루언서</label>
+        <select id="infFilter" style="background:var(--surface);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;"></select>
+        <label>기간</label>
+        <input type="date" id="adminDateFrom" />
+        <span style="color:var(--muted);font-size:13px;">~</span>
+        <input type="date" id="adminDateTo" />
+        <button class="btn-filter" id="adminQueryBtn" onclick="applyAdminFilter()">조회</button>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card blue">
+          <div class="metric-lbl">신규 가입</div>
+          <div class="metric-val" id="amJoin">—</div>
+          <div class="metric-sub">명 유입</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">실제 플레이</div>
+          <div class="metric-val" id="amPlay">—</div>
+          <div class="metric-sub" id="amPlayRate">가입 대비 —%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">총 발생 레이크</div>
+          <div class="metric-val" id="amRake">—</div>
+          <div class="metric-sub">원</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">총 매출</div>
+          <div class="metric-val" id="amSales">—</div>
+          <div class="metric-sub">원</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-lbl">총 수익 쉐어</div>
+          <div class="metric-val accent" id="amShare">—</div>
+          <div class="metric-sub">원</div>
         </div>
       </div>
 
-      <div class="footer-note" id="lastUpdated"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">일별 신규 가입 / 플레이</div>
+          <div class="chart-wrap">
+            <canvas id="aJoinChart" role="img" aria-label="일별 신규 가입 및 플레이"></canvas>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:#3b8eff;"></span>신규 가입</span>
+            <span><span class="legend-dot" style="background:#00e5a0;"></span>플레이</span>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">일별 레이크 / 매출</div>
+          <div class="chart-wrap">
+            <canvas id="aRakeChart" role="img" aria-label="일별 레이크 및 매출"></canvas>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:#00e5a0;"></span>레이크</span>
+            <span><span class="legend-dot" style="background:#3b8eff;"></span>매출</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:1rem;">
+        <div class="chart-title">플랫폼별 가입 비율</div>
+        <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+          <div style="position:relative;height:160px;width:160px;flex-shrink:0;">
+            <canvas id="aPlatformChart" role="img" aria-label="플랫폼별 가입 비율"></canvas>
+          </div>
+          <div id="aPlatformLegend" style="display:flex;flex-direction:column;gap:8px;font-size:13px;min-width:160px;"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">인플루언서별 성과</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border2);">
+                <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;">인플루언서</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">신규 가입</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">플레이</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">레이크</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">매출</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">수익 쉐어</th>
+              </tr>
+            </thead>
+            <tbody id="infPerfTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="footer-note" id="adminLastUpdated"></div>
     </div>
   </div>
 
 </div>
 <script>
-// ★ 본인 GitHub 아이디와 repo 이름으로 변경하세요
 const GITHUB_USER = 'jiny96';
 const GITHUB_REPO = 'influencer-dashboard';
 const RAW = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main`;
 
 let SESSION = null;
 let allInfluencers = [], allInstalls = [], allRake = [];
-let joinChartObj, rakeChartObj, platformChartObj;
+let joinChartObj, rakeChartObj, platformChartObj, salesChartObj;
 
-// 날짜 파싱: yyyymmdd 또는 "2026-04-14 0:24:57" 등 모두 지원
 function parseDateTime(s) {
   s = String(s).trim();
   if (/^\d{8}$/.test(s)) {
-    return new Date(
-      parseInt(s.slice(0,4)),
-      parseInt(s.slice(4,6)) - 1,
-      parseInt(s.slice(6,8))
-    );
+    return new Date(parseInt(s.slice(0,4)), parseInt(s.slice(4,6))-1, parseInt(s.slice(6,8)));
   }
   return new Date(s);
 }
-
-function parseAmount(v) {
-  return parseFloat(String(v).replace(/,/g, '')) || 0;
-}
-
+function parseAmount(v) { return parseFloat(String(v).replace(/,/g,'')) || 0; }
+function fmtNum(n) { return Math.round(n).toLocaleString(); }
 const $ = id => document.getElementById(id);
 
-function showLogin() { $('loginView').style.display = ''; $('dashView').style.display = 'none'; }
-function showDash()  { $('loginView').style.display = 'none'; $('dashView').style.display = 'flex'; }
-function showErr(id, msg) { const el = $(id); el.textContent = msg; el.style.display = 'block'; }
-function hideErr(id) { $(id).style.display = 'none'; }
-function setLoading(v, msg) {
-  $('loadingOverlay').classList.toggle('active', v);
-  if (msg) $('loadingMsg').textContent = msg;
-  const qb = $('queryBtn'); if (qb) qb.disabled = v;
-  const lb = $('loginBtn'); if (lb) lb.disabled = v;
+function showLogin() { $('loginView').style.display=''; $('dashView').style.display='none'; $('adminView').style.display='none'; }
+function showDash()  { $('loginView').style.display='none'; $('dashView').style.display='flex'; $('adminView').style.display='none'; }
+function showAdmin() { $('loginView').style.display='none'; $('dashView').style.display='none'; $('adminView').style.display='flex'; }
+function showErr(id,msg){ const el=$(id); el.textContent=msg; el.style.display='block'; }
+function hideErr(id){ $(id).style.display='none'; }
+function setLoading(v,msg){
+  $('loadingOverlay').classList.toggle('active',v);
+  if(msg) $('loadingMsg').textContent=msg;
+  ['queryBtn','adminQueryBtn','loginBtn'].forEach(id=>{ const el=$(id); if(el) el.disabled=v; });
 }
 
-// CSV 파싱
-function parseCSV(text) {
-  const lines = text.trim().split('\n').map(l => l.replace(/\r/g, ''));
-  if (lines.length < 2) return [];
-  const sep = lines[0].includes('\t') ? '\t' : ',';
-  const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
-  return lines.slice(1).map(line => {
-    const vals = line.split(sep);
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+function parseCSV(text){
+  const lines=text.trim().split('\n').map(l=>l.replace(/\r/g,''));
+  if(lines.length<2) return [];
+  const sep=lines[0].includes('\t')?'\t':',';
+  const headers=lines[0].split(sep).map(h=>h.trim().toLowerCase());
+  return lines.slice(1).map(line=>{
+    const vals=line.split(sep);
+    const obj={};
+    headers.forEach((h,i)=>{ obj[h]=(vals[i]||'').trim(); });
     return obj;
   });
 }
 
-async function fetchCSV(filename) {
-  const res = await fetch(`${RAW}/${filename}?t=${Date.now()}`);
-  if (!res.ok) throw new Error(`${filename} 로딩 실패 (${res.status})`);
+async function fetchCSV(filename){
+  const res=await fetch(`${RAW}/${filename}?t=${Date.now()}`);
+  if(!res.ok) throw new Error(`${filename} 로딩 실패 (${res.status})`);
   return parseCSV(await res.text());
 }
 
-async function loadAllData() {
-  const [inf, inst, rake] = await Promise.all([
+async function loadAllData(){
+  const [inf,inst,rake]=await Promise.all([
     fetchCSV('influencers.csv'),
     fetchCSV('installs.csv'),
     fetchCSV('rake.csv')
   ]);
-  allInfluencers = inf;
-  allInstalls    = inst;
-  allRake        = rake;
+  allInfluencers=inf; allInstalls=inst; allRake=rake;
 }
 
-async function doLogin() {
+async function doLogin(){
   hideErr('loginErr');
-  const id = $('loginId').value.trim();
-  const pw = $('loginPw').value.trim();
-  if (!id || !pw) { showErr('loginErr', '아이디와 비밀번호를 입력해주세요.'); return; }
-  setLoading(true, '로그인 중...');
-  try {
+  const id=$('loginId').value.trim();
+  const pw=$('loginPw').value.trim();
+  if(!id||!pw){ showErr('loginErr','아이디와 비밀번호를 입력해주세요.'); return; }
+  setLoading(true,'로그인 중...');
+  try{
     await loadAllData();
-    const found = allInfluencers.find(r => r.influencer_id === id && r.password === pw);
-    if (!found) { showErr('loginErr', '아이디 또는 비밀번호가 올바르지 않습니다.'); return; }
-    SESSION = found;
-    initDash();
-  } catch(e) {
-    showErr('loginErr', '데이터 로딩 실패: ' + e.message);
-  } finally {
-    setLoading(false);
-  }
+    const found=allInfluencers.find(r=>r.influencer_id===id&&r.password===pw);
+    if(!found){ showErr('loginErr','아이디 또는 비밀번호가 올바르지 않습니다.'); return; }
+    SESSION=found;
+    if(SESSION.role==='admin') initAdmin();
+    else initDash();
+  }catch(e){ showErr('loginErr','데이터 로딩 실패: '+e.message); }
+  finally{ setLoading(false); }
 }
 
-function doLogout() { SESSION = null; allInstalls = []; allRake = []; showLogin(); }
+function doLogout(){ SESSION=null; allInstalls=[]; allRake=[]; showLogin(); }
+function fmt(d){ return d.toISOString().slice(0,10); }
 
-function fmt(d) { return d.toISOString().slice(0, 10); }
-
-function initDash() {
-  $('dashName').textContent = SESSION.name || SESSION.influencer_id;
-  const today    = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  $('dateFrom').value = fmt(firstDay);
-  $('dateTo').value   = fmt(today);
+// ── 인플루언서 대시보드 ──
+function initDash(){
+  $('dashName').textContent=SESSION.name||SESSION.influencer_id;
+  const today=new Date();
+  const firstDay=new Date(today.getFullYear(),today.getMonth(),1);
+  $('dateFrom').value=fmt(firstDay);
+  $('dateTo').value=fmt(today);
   showDash();
   renderDash();
 }
 
-async function applyFilter() {
-  setLoading(true, '데이터 새로고침 중...');
-  try {
-    await loadAllData();
-    renderDash();
-    $('lastUpdated').textContent = '마지막 조회: ' + new Date().toLocaleString('ko-KR');
-  } catch(e) {
-    alert('데이터 로딩 실패: ' + e.message);
-  } finally {
-    setLoading(false);
-  }
+async function applyFilter(){
+  setLoading(true,'데이터 새로고침 중...');
+  try{ await loadAllData(); renderDash(); }
+  catch(e){ alert('데이터 로딩 실패: '+e.message); }
+  finally{ setLoading(false); }
 }
 
-function renderDash() {
-  const from      = new Date($('dateFrom').value);
-  const to        = new Date($('dateTo').value);
-  to.setHours(23, 59, 59);
-  const infId     = SESSION.influencer_id;
-  const shareRate = parseFloat(SESSION.share_rate) || 0.2;
+function renderDash(){
+  const from=new Date($('dateFrom').value);
+  const to=new Date($('dateTo').value); to.setHours(23,59,59);
+  const infId=SESSION.influencer_id;
+  const shareRate=parseFloat(SESSION.share_rate)||0.2;
 
-  // installs: gsn, install_time, af_sub1, platform → 신규 가입 (날짜 필터)
-  const myInstalls = allInstalls.filter(r => {
-    const d = parseDateTime(r.install_time);
-    return String(r.af_sub1).trim() === infId && d >= from && d <= to;
+  const myInstalls=allInstalls.filter(r=>{
+    const d=parseDateTime(r.install_time);
+    return String(r.af_sub1).trim()===infId&&d>=from&&d<=to;
   });
-  const joinGSNs = new Set(myInstalls.map(r => String(r.gsn)));
+  const joinGSNs=new Set(myInstalls.map(r=>String(r.gsn)));
 
-  // rake: gsn, date, rake_amount, af_sub1 → 레이크 (날짜 필터)
-  const myRake = allRake.filter(r => {
-    const d = parseDateTime(r.date);
-    return String(r.af_sub1).trim() === infId && d >= from && d <= to;
+  const myRake=allRake.filter(r=>{
+    const d=parseDateTime(r.date);
+    return String(r.af_sub1).trim()===infId&&d>=from&&d<=to;
   });
 
-  // 플레이 = rake에서 레이크 > 0인 GSN (installs에 있는 GSN만)
-  const playGSNs = new Set(
-    myRake.filter(r => parseAmount(r.rake_amount) > 0)
-          .map(r => String(r.gsn))
-          .filter(g => {
-            // installs 전체 기간에서 이 인플루언서 소속인지 확인
-            return allInstalls.some(i => String(i.gsn) === g && String(i.af_sub1).trim() === infId);
-          })
+  const playGSNs=new Set(
+    myRake.filter(r=>parseAmount(r.rake_amount)>0)
+          .map(r=>String(r.gsn))
+          .filter(g=>allInstalls.some(i=>String(i.gsn)===g&&String(i.af_sub1).trim()===infId))
   );
 
-  const totalJoin = joinGSNs.size;
-  const totalPlay = playGSNs.size;
-  const totalRake = myRake.reduce((s, r) => s + parseAmount(r.rake_amount), 0) / 10000;
-  const myShare   = totalRake * shareRate;
-  const playRate  = totalJoin > 0 ? ((totalPlay / totalJoin) * 100).toFixed(1) : '0.0';
+  const totalJoin=joinGSNs.size;
+  const totalPlay=playGSNs.size;
+  const totalRake=myRake.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
+  const myShare=totalRake*shareRate;
+  const playRate=totalJoin>0?((totalPlay/totalJoin)*100).toFixed(1):'0.0';
 
-  $('mJoin').textContent     = totalJoin.toLocaleString();
-  $('mPlay').textContent     = totalPlay.toLocaleString();
-  $('mPlayRate').textContent = `가입 대비 ${playRate}%`;
-  $('mRake').textContent     = Math.round(totalRake).toLocaleString();
-  $('mShare').textContent    = Math.round(myShare).toLocaleString();
-  $('lastUpdated').textContent = '마지막 조회: ' + new Date().toLocaleString('ko-KR');
+  $('mJoin').textContent=fmtNum(totalJoin);
+  $('mPlay').textContent=fmtNum(totalPlay);
+  $('mPlayRate').textContent=`가입 대비 ${playRate}%`;
+  $('mRake').textContent=fmtNum(totalRake);
+  $('mShare').textContent=fmtNum(myShare);
+  $('lastUpdated').textContent='마지막 조회: '+new Date().toLocaleString('ko-KR');
 
-  // 일별 집계
-  const dateMap = {};
-
-  // 가입 - install_time 기준
-  myInstalls.forEach(r => {
-    const dt = parseDateTime(r.install_time);
-    const d  = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-    if (!dateMap[d]) dateMap[d] = { join: new Set(), play: new Set(), rake: 0 };
+  const dateMap={};
+  myInstalls.forEach(r=>{
+    const dt=parseDateTime(r.install_time);
+    const d=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if(!dateMap[d]) dateMap[d]={join:new Set(),play:new Set(),rake:0};
     dateMap[d].join.add(String(r.gsn));
   });
-
-  // 레이크 - date 기준
-  myRake.forEach(r => {
-    const dt = parseDateTime(r.date);
-    const d  = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-    if (!dateMap[d]) dateMap[d] = { join: new Set(), play: new Set(), rake: 0 };
-    if (parseAmount(r.rake_amount) > 0 &&
-        allInstalls.some(i => String(i.gsn) === String(r.gsn) && String(i.af_sub1).trim() === infId)) {
+  myRake.forEach(r=>{
+    const dt=parseDateTime(r.date);
+    const d=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if(!dateMap[d]) dateMap[d]={join:new Set(),play:new Set(),rake:0};
+    if(parseAmount(r.rake_amount)>0&&allInstalls.some(i=>String(i.gsn)===String(r.gsn)&&String(i.af_sub1).trim()===infId))
       dateMap[d].play.add(String(r.gsn));
-    }
-    dateMap[d].rake += (parseAmount(r.rake_amount) / 10000) * shareRate;
+    dateMap[d].rake+=(parseAmount(r.rake_amount)/10000)*shareRate;
   });
 
-  const sortedDates = Object.keys(dateMap).sort();
-  const xLabels  = sortedDates.map(d => d.slice(5));
-  const joinVals = sortedDates.map(d => dateMap[d].join.size);
-  const playVals = sortedDates.map(d => dateMap[d].play.size);
-  const rakeVals = sortedDates.map(d => Math.round(dateMap[d].rake));
+  const sortedDates=Object.keys(dateMap).sort();
+  const xLabels=sortedDates.map(d=>d.slice(5));
+  const joinVals=sortedDates.map(d=>dateMap[d].join.size);
+  const playVals=sortedDates.map(d=>dateMap[d].play.size);
+  const rakeVals=sortedDates.map(d=>Math.round(dateMap[d].rake));
 
-  const gridColor = 'rgba(255,255,255,0.05)';
-  const tickColor = '#7a7f8e';
+  const gc='rgba(255,255,255,0.05)', tc='#7a7f8e';
+  if(joinChartObj) joinChartObj.destroy();
+  joinChartObj=new Chart($('joinChart'),{type:'bar',data:{labels:xLabels,datasets:[
+    {label:'신규 가입',data:joinVals,backgroundColor:'#3b8eff',borderRadius:4},
+    {label:'플레이',data:playVals,backgroundColor:'#00e5a0',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tc,font:{size:11},autoSkip:true,maxRotation:45},grid:{color:gc}},
+            y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}}}});
 
-  if (joinChartObj) joinChartObj.destroy();
-  joinChartObj = new Chart($('joinChart'), {
-    type: 'bar',
-    data: {
-      labels: xLabels,
-      datasets: [
-        { label: '신규 가입', data: joinVals, backgroundColor: '#3b8eff', borderRadius: 4 },
-        { label: '플레이',   data: playVals, backgroundColor: '#00e5a0', borderRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: tickColor, font: { size: 11 }, autoSkip: true, maxRotation: 45 }, grid: { color: gridColor } },
-        y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor } }
-      }
-    }
+  if(rakeChartObj) rakeChartObj.destroy();
+  rakeChartObj=new Chart($('rakeChart'),{type:'line',data:{labels:xLabels,datasets:[{
+    label:'내 수익',data:rakeVals,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',
+    fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#00e5a0'
+  }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tc,font:{size:11},autoSkip:true,maxRotation:45},grid:{color:gc}},
+            y:{ticks:{color:tc,font:{size:11},callback:v=>v.toLocaleString()+'원'},grid:{color:gc}}}}});
+}
+
+// ── 관리자 대시보드 ──
+function initAdmin(){
+  $('adminName').textContent='관리자';
+  const today=new Date();
+  const firstDay=new Date(today.getFullYear(),today.getMonth(),1);
+  $('adminDateFrom').value=fmt(firstDay);
+  $('adminDateTo').value=fmt(today);
+
+  // 인플루언서 필터 셀렉트 생성
+  const sel=$('infFilter');
+  sel.innerHTML='<option value="all">전체 인플루언서</option>';
+  const infs=allInfluencers.filter(r=>r.role!=='admin');
+  infs.forEach(r=>{
+    const opt=document.createElement('option');
+    opt.value=r.influencer_id; opt.textContent=r.name||r.influencer_id;
+    sel.appendChild(opt);
   });
 
-  if (rakeChartObj) rakeChartObj.destroy();
-  rakeChartObj = new Chart($('rakeChart'), {
-    type: 'line',
-    data: {
-      labels: xLabels,
-      datasets: [{
-        label: '내 수익',
-        data: rakeVals,
-        borderColor: '#00e5a0',
-        backgroundColor: 'rgba(0,229,160,0.07)',
-        fill: true, tension: 0.4, pointRadius: 3,
-        pointBackgroundColor: '#00e5a0'
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: tickColor, font: { size: 11 }, autoSkip: true, maxRotation: 45 }, grid: { color: gridColor } },
-        y: { ticks: { color: tickColor, font: { size: 11 }, callback: v => v.toLocaleString() + '원' }, grid: { color: gridColor } }
-      }
-    }
+  showAdmin();
+  renderAdmin();
+}
+
+async function applyAdminFilter(){
+  setLoading(true,'데이터 새로고침 중...');
+  try{ await loadAllData(); renderAdmin(); }
+  catch(e){ alert('데이터 로딩 실패: '+e.message); }
+  finally{ setLoading(false); }
+}
+
+function renderAdmin(){
+  const from=new Date($('adminDateFrom').value);
+  const to=new Date($('adminDateTo').value); to.setHours(23,59,59);
+  const selInf=$('infFilter').value;
+
+  const targetInfs=selInf==='all'
+    ? allInfluencers.filter(r=>r.role!=='admin').map(r=>r.influencer_id)
+    : [selInf];
+
+  const myInstalls=allInstalls.filter(r=>{
+    const d=parseDateTime(r.install_time);
+    return targetInfs.includes(String(r.af_sub1).trim())&&d>=from&&d<=to;
+  });
+  const joinGSNs=new Set(myInstalls.map(r=>String(r.gsn)));
+
+  const myRake=allRake.filter(r=>{
+    const d=parseDateTime(r.date);
+    return targetInfs.includes(String(r.af_sub1).trim())&&d>=from&&d<=to;
   });
 
-  const platforms = {};
-  myInstalls.forEach(r => { const p = r.platform || 'unknown'; platforms[p] = (platforms[p] || 0) + 1; });
-  const platLabels = Object.keys(platforms);
-  const platVals   = platLabels.map(k => platforms[k]);
-  const platColors = ['#3b8eff', '#00e5a0', '#888780', '#f59e0b', '#a78bfa'];
-  const total = platVals.reduce((a, b) => a + b, 0) || 1;
+  const playGSNs=new Set(
+    myRake.filter(r=>parseAmount(r.rake_amount)>0).map(r=>String(r.gsn))
+          .filter(g=>allInstalls.some(i=>String(i.gsn)===g&&targetInfs.includes(String(i.af_sub1).trim())))
+  );
 
-  const platCanvas = $('platformChart');
-  platCanvas.width  = 160;
-  platCanvas.height = 160;
-  if (platformChartObj) platformChartObj.destroy();
-  platformChartObj = new Chart(platCanvas, {
-    type: 'doughnut',
-    data: {
-      labels: platLabels,
-      datasets: [{ data: platVals, backgroundColor: platColors.slice(0, platLabels.length), borderWidth: 0 }]
-    },
-    options: { responsive: false, cutout: '68%', plugins: { legend: { display: false } } }
+  const totalJoin=joinGSNs.size;
+  const totalPlay=playGSNs.size;
+  const totalRake=myRake.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
+  const totalSales=myRake.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
+  const playRate=totalJoin>0?((totalPlay/totalJoin)*100).toFixed(1):'0.0';
+
+  // 인플루언서별 수익 쉐어 합산
+  const totalShare=allInfluencers
+    .filter(r=>targetInfs.includes(r.influencer_id))
+    .reduce((sum,inf)=>{
+      const infRake=allRake.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.date)>=from&&parseDateTime(r.date)<=to)
+                           .reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
+      return sum+infRake*(parseFloat(inf.share_rate)||0.2);
+    },0);
+
+  $('amJoin').textContent=fmtNum(totalJoin);
+  $('amPlay').textContent=fmtNum(totalPlay);
+  $('amPlayRate').textContent=`가입 대비 ${playRate}%`;
+  $('amRake').textContent=fmtNum(totalRake);
+  $('amSales').textContent=fmtNum(totalSales);
+  $('amShare').textContent=fmtNum(totalShare);
+  $('adminLastUpdated').textContent='마지막 조회: '+new Date().toLocaleString('ko-KR');
+
+  // 일별 집계
+  const dateMap={};
+  myInstalls.forEach(r=>{
+    const dt=parseDateTime(r.install_time);
+    const d=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if(!dateMap[d]) dateMap[d]={join:new Set(),play:new Set(),rake:0,sales:0};
+    dateMap[d].join.add(String(r.gsn));
+  });
+  myRake.forEach(r=>{
+    const dt=parseDateTime(r.date);
+    const d=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if(!dateMap[d]) dateMap[d]={join:new Set(),play:new Set(),rake:0,sales:0};
+    if(parseAmount(r.rake_amount)>0&&allInstalls.some(i=>String(i.gsn)===String(r.gsn)&&targetInfs.includes(String(i.af_sub1).trim())))
+      dateMap[d].play.add(String(r.gsn));
+    dateMap[d].rake+=parseAmount(r.rake_amount)/10000;
+    dateMap[d].sales+=parseAmount(r.sales_amount||0)/10000;
   });
 
-  $('platformLegend').innerHTML = platLabels.map((l, i) => `
-    <div style="display:flex; align-items:center; gap:8px;">
-      <div style="width:10px; height:10px; border-radius:3px; background:${platColors[i]}; flex-shrink:0;"></div>
+  const sortedDates=Object.keys(dateMap).sort();
+  const xLabels=sortedDates.map(d=>d.slice(5));
+  const joinVals=sortedDates.map(d=>dateMap[d].join.size);
+  const playVals=sortedDates.map(d=>dateMap[d].play.size);
+  const rakeVals=sortedDates.map(d=>Math.round(dateMap[d].rake));
+  const salesVals=sortedDates.map(d=>Math.round(dateMap[d].sales));
+
+  const gc='rgba(255,255,255,0.05)', tc='#7a7f8e';
+
+  if(joinChartObj) joinChartObj.destroy();
+  joinChartObj=new Chart($('aJoinChart'),{type:'bar',data:{labels:xLabels,datasets:[
+    {label:'신규 가입',data:joinVals,backgroundColor:'#3b8eff',borderRadius:4},
+    {label:'플레이',data:playVals,backgroundColor:'#00e5a0',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tc,font:{size:11},autoSkip:true,maxRotation:45},grid:{color:gc}},
+            y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}}}});
+
+  if(rakeChartObj) rakeChartObj.destroy();
+  rakeChartObj=new Chart($('aRakeChart'),{type:'line',data:{labels:xLabels,datasets:[
+    {label:'레이크',data:rakeVals,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#00e5a0'},
+    {label:'매출',data:salesVals,borderColor:'#3b8eff',backgroundColor:'rgba(59,142,255,0.07)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#3b8eff'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tc,font:{size:11},autoSkip:true,maxRotation:45},grid:{color:gc}},
+            y:{ticks:{color:tc,font:{size:11},callback:v=>v.toLocaleString()+'원'},grid:{color:gc}}}}});
+
+  // 플랫폼별
+  const platforms={};
+  myInstalls.forEach(r=>{ const p=r.platform||'unknown'; platforms[p]=(platforms[p]||0)+1; });
+  const platLabels=Object.keys(platforms);
+  const platVals=platLabels.map(k=>platforms[k]);
+  const platColors=['#3b8eff','#00e5a0','#888780','#f59e0b','#a78bfa'];
+  const total=platVals.reduce((a,b)=>a+b,0)||1;
+
+  if(platformChartObj) platformChartObj.destroy();
+  const platCanvas=$('aPlatformChart');
+  platCanvas.width=160; platCanvas.height=160;
+  platformChartObj=new Chart(platCanvas,{type:'doughnut',data:{labels:platLabels,
+    datasets:[{data:platVals,backgroundColor:platColors.slice(0,platLabels.length),borderWidth:0}]},
+    options:{responsive:false,cutout:'68%',plugins:{legend:{display:false}}}});
+
+  $('aPlatformLegend').innerHTML=platLabels.map((l,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:10px;height:10px;border-radius:3px;background:${platColors[i]};flex-shrink:0;"></div>
       <span style="color:var(--muted);">${l}</span>
-      <span style="color:var(--text); font-weight:500; margin-left:auto; padding-left:12px;">${platVals[i].toLocaleString()}명 (${Math.round(platVals[i] / total * 100)}%)</span>
-    </div>
-  `).join('');
+      <span style="color:var(--text);font-weight:500;margin-left:auto;padding-left:12px;">${platVals[i].toLocaleString()}명 (${Math.round(platVals[i]/total*100)}%)</span>
+    </div>`).join('');
+
+  // 인플루언서별 성과 테이블
+  const infPerf=allInfluencers.filter(r=>r.role!=='admin').map(inf=>{
+    const infInst=allInstalls.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.install_time)>=from&&parseDateTime(r.install_time)<=to);
+    const infRakeRows=allRake.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.date)>=from&&parseDateTime(r.date)<=to);
+    const infJoin=new Set(infInst.map(r=>String(r.gsn))).size;
+    const infPlay=new Set(infRakeRows.filter(r=>parseAmount(r.rake_amount)>0).map(r=>String(r.gsn)).filter(g=>infInst.some(i=>String(i.gsn)===g))).size;
+    const infRake=infRakeRows.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
+    const infSales=infRakeRows.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
+    const infShare=infRake*(parseFloat(inf.share_rate)||0.2);
+    return {name:inf.name||inf.influencer_id,join:infJoin,play:infPlay,rake:infRake,sales:infSales,share:infShare};
+  });
+
+  $('infPerfTable').innerHTML=infPerf.map(r=>`
+    <tr>
+      <td style="padding:10px 12px;color:var(--text);font-weight:500;">${r.name}</td>
+      <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.join)}</td>
+      <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.play)}</td>
+      <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.rake)}</td>
+      <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.sales)}</td>
+      <td style="padding:10px 12px;text-align:right;color:var(--accent);font-weight:500;">${fmtNum(r.share)}</td>
+    </tr>`).join('');
 }
 </script>
 </body>
