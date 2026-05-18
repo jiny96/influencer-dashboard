@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>인플루언서 성과 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600&family=Teko:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2229;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #7a7f8e;
+    --accent: #00e5a0;
+    --accent2: #3b8eff;
+    --danger: #ff4f4f;
+    --font-body: 'Pretendard', sans-serif;
+    --font-display: 'Teko', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100vh; }
+  input, button { font-family: var(--font-body); font-size: 14px; }
+
+  .shell { min-height: 100vh; display: flex; flex-direction: column; }
+  .centered { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+  .panel { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 2rem; }
+  .panel-logo { font-family: var(--font-display); font-size: 28px; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 0.25rem; }
+  .panel-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.75rem; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .field input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 14px; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary { width: 100%; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: 11px; font-weight: 600; cursor: pointer; margin-top: 0.5rem; transition: opacity 0.15s, transform 0.1s; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .err-msg { font-size: 12px; color: var(--danger); margin-top: 10px; display: none; }
+
+  .dash { display: none; flex-direction: column; min-height: 100vh; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 56px; border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+  .topbar-logo { font-family: var(--font-display); font-size: 22px; color: var(--accent); letter-spacing: 0.04em; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .topbar-name { font-size: 13px; color: var(--muted); }
+  .topbar-name span { color: var(--text); font-weight: 500; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border2); border-radius: 7px; padding: 6px 12px; color: var(--muted); cursor: pointer; font-size: 12px; transition: color 0.15s; }
+  .btn-ghost:hover { color: var(--text); }
+
+  .main { flex: 1; padding: 1.5rem; overflow: auto; }
+  .filterbar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .filterbar label { font-size: 12px; color: var(--muted); }
+  .filterbar input[type=date] { background: var(--surface); border: 1px solid var(--border2); border-radius: 7px; padding: 7px 10px; color: var(--text); outline: none; font-size: 13px; color-scheme: dark; }
+  .filterbar input[type=date]:focus { border-color: var(--accent); }
+  .btn-filter { background: var(--accent); color: #0d0f14; border: none; border-radius: 7px; padding: 8px 16px; font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.15s; }
+  .btn-filter:hover { opacity: 0.85; }
+  .btn-filter:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; position: relative; overflow: hidden; }
+  .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent-bar, var(--border)); border-radius: 12px 12px 0 0; }
+  .metric-card.green { --accent-bar: var(--accent); }
+  .metric-card.blue  { --accent-bar: var(--accent2); }
+  .metric-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .metric-val { font-family: var(--font-display); font-size: 32px; line-height: 1; color: var(--text); letter-spacing: 0.01em; }
+  .metric-val.accent { color: var(--accent); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .chart-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+  .chart-wrap { position: relative; height: 200px; }
+  .legend { display: flex; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  .platform-wrap { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
+  .donut-wrap { position: relative; height: 140px; width: 140px; flex-shrink: 0; }
+  .platform-legend { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+  .platform-legend-item { display: flex; align-items: center; gap: 8px; }
+  .platform-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .platform-name { color: var(--muted); }
+  .platform-val { color: var(--text); font-weight: 500; margin-left: auto; padding-left: 12px; }
+
+  .footer-note { font-size: 11px; color: var(--muted); text-align: right; margin-top: 1rem; }
+
+  .loading { display: none; position: fixed; inset: 0; background: rgba(13,15,20,0.75); align-items: center; justify-content: center; z-index: 100; font-size: 14px; color: var(--muted); gap: 10px; }
+  .loading.active { display: flex; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="loading" id="loadingOverlay">
+    <div class="spinner"></div>
+    <span id="loadingMsg">처리 중...</span>
+  </div>
+
+  <!-- Login -->
+  <div class="centered" id="loginView">
+    <div class="panel">
+      <div class="panel-logo">STATS</div>
+      <div class="panel-sub">인플루언서 전용 성과 대시보드</div>
+      <div class="field">
+        <label>아이디</label>
+        <input id="loginId" type="text" placeholder="influencer_001" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input id="loginPw" type="password" placeholder="••••••"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인</button>
+      <div class="err-msg" id="loginErr"></div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dash" id="dashView">
+    <div class="topbar">
+      <div class="topbar-logo">STATS</div>
+      <div class="topbar-right">
+        <div class="topbar-name">안녕하세요, <span id="dashName"></span>님</div>
+        <div style="font-size:11px;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);padding:3px 10px;border-radius:20px;color:var(--accent);">레이크 쉐어 20%</div>
+        <button class="btn-ghost" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="filterbar">
+        <label>기간</label>
+        <input type="date" id="dateFrom" />
+        <span style="color:var(--muted);font-size:13px;">~</span>
+        <input type="date" id="dateTo" />
+        <button class="btn-filter" id="queryBtn" onclick="applyFilter()">조회</button>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card blue">
+          <div class="metric-lbl">신규 가입</div>
+          <div class="metric-val" id="mJoin">—</div>
+          <div class="metric-sub">명 유입</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">실제 플레이</div>
+          <div class="metric-val" id="mPlay">—</div>
+          <div class="metric-sub" id="mPlayRate">가입 대비 —%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-lbl">총 발생 레이크</div>
+          <div class="metric-val" id="mRake">—</div>
+          <div class="metric-sub">원</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-lbl">내 수익 (20%)</div>
+          <div class="metric-val accent" id="mShare">—</div>
+          <div class="metric-sub">원</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">일별 신규 가입 / 플레이</div>
+          <div class="chart-wrap">
+            <canvas id="joinChart" role="img" aria-label="일별 신규 가입 및 플레이 유저 수 추이"></canvas>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:#3b8eff;"></span>신규 가입</span>
+            <span><span class="legend-dot" style="background:#00e5a0;"></span>플레이</span>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">일별 내 수익 (원)</div>
+          <div class="chart-wrap">
+            <canvas id="rakeChart" role="img" aria-label="일별 레이크 쉐어 수익 추이"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">플랫폼별 가입 비율</div>
+        <div class="platform-wrap">
+          <div class="donut-wrap">
+            <canvas id="platformChart" role="img" aria-label="플랫폼별 가입 비율"></canvas>
+          </div>
+          <div class="platform-legend" id="platformLegend"></div>
+        </div>
+      </div>
+
+      <div class="footer-note" id="lastUpdated"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ★ 본인 GitHub 아이디와 repo 이름으로 변경하세요
+const GITHUB_USER = 'YOUR_GITHUB_USERNAME';
+const GITHUB_REPO = 'influencer-dashboard';
+const RAW = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/data`;
+
+let SESSION = null;
+let allInfluencers = [], allInstalls = [], allRake = [];
+let joinChartObj, rakeChartObj, platformChartObj;
+
+const $ = id => document.getElementById(id);
+
+function showLogin() { $('loginView').style.display = ''; $('dashView').style.display = 'none'; }
+function showDash()  { $('loginView').style.display = 'none'; $('dashView').style.display = 'flex'; }
+function showErr(id, msg) { const el = $(id); el.textContent = msg; el.style.display = 'block'; }
+function hideErr(id) { $(id).style.display = 'none'; }
+function setLoading(v, msg) {
+  $('loadingOverlay').classList.toggle('active', v);
+  if (msg) $('loadingMsg').textContent = msg;
+  const qb = $('queryBtn'); if (qb) qb.disabled = v;
+  const lb = $('loginBtn'); if (lb) lb.disabled = v;
+}
+
+// CSV 파싱
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.replace(/\r/g, ''));
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+    return obj;
+  });
+}
+
+async function fetchCSV(filename) {
+  const res = await fetch(`${RAW}/${filename}?t=${Date.now()}`);
+  if (!res.ok) throw new Error(`${filename} 로딩 실패 (${res.status})`);
+  return parseCSV(await res.text());
+}
+
+async function loadAllData() {
+  const [inf, inst, rake] = await Promise.all([
+    fetchCSV('influencers.csv'),
+    fetchCSV('installs.csv'),
+    fetchCSV('rake.csv')
+  ]);
+  allInfluencers = inf;
+  allInstalls    = inst;
+  allRake        = rake;
+}
+
+async function doLogin() {
+  hideErr('loginErr');
+  const id = $('loginId').value.trim();
+  const pw = $('loginPw').value.trim();
+  if (!id || !pw) { showErr('loginErr', '아이디와 비밀번호를 입력해주세요.'); return; }
+  setLoading(true, '로그인 중...');
+  try {
+    await loadAllData();
+    const found = allInfluencers.find(r => r.influencer_id === id && r.password === pw);
+    if (!found) { showErr('loginErr', '아이디 또는 비밀번호가 올바르지 않습니다.'); return; }
+    SESSION = found;
+    initDash();
+  } catch(e) {
+    showErr('loginErr', '데이터 로딩 실패: ' + e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function doLogout() { SESSION = null; allInstalls = []; allRake = []; showLogin(); }
+
+function fmt(d) { return d.toISOString().slice(0, 10); }
+
+function initDash() {
+  $('dashName').textContent = SESSION.name || SESSION.influencer_id;
+  const today    = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  $('dateFrom').value = fmt(firstDay);
+  $('dateTo').value   = fmt(today);
+  showDash();
+  renderDash();
+}
+
+async function applyFilter() {
+  setLoading(true, '데이터 새로고침 중...');
+  try {
+    await loadAllData();
+    renderDash();
+    $('lastUpdated').textContent = '마지막 조회: ' + new Date().toLocaleString('ko-KR');
+  } catch(e) {
+    alert('데이터 로딩 실패: ' + e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderDash() {
+  const from      = new Date($('dateFrom').value);
+  const to        = new Date($('dateTo').value);
+  to.setHours(23, 59, 59);
+  const infId     = SESSION.influencer_id;
+  const shareRate = parseFloat(SESSION.share_rate) || 0.2;
+
+  const myInstalls = allInstalls.filter(r => {
+    const d = new Date(r.install_time);
+    return r.af_sub1 === infId && d >= from && d <= to;
+  });
+
+  const myGSNs   = new Set(myInstalls.map(r => String(r.customer_user_id)));
+
+  const myRake = allRake.filter(r => {
+    const d = new Date(r.date);
+    return myGSNs.has(String(r.customer_user_id)) && d >= from && d <= to;
+  });
+
+  const playGSNs  = new Set(myRake.map(r => String(r.customer_user_id)));
+  const totalJoin = myInstalls.length;
+  const totalPlay = [...playGSNs].filter(g => myGSNs.has(g)).length;
+  const totalRake = myRake.reduce((s, r) => s + (parseFloat(r.rake_amount) || 0), 0);
+  const myShare   = totalRake * shareRate;
+  const playRate  = totalJoin > 0 ? ((totalPlay / totalJoin) * 100).toFixed(1) : '0.0';
+
+  $('mJoin').textContent     = totalJoin.toLocaleString();
+  $('mPlay').textContent     = totalPlay.toLocaleString();
+  $('mPlayRate').textContent = `가입 대비 ${playRate}%`;
+  $('mRake').textContent     = Math.round(totalRake).toLocaleString();
+  $('mShare').textContent    = Math.round(myShare).toLocaleString();
+  $('lastUpdated').textContent = '마지막 조회: ' + new Date().toLocaleString('ko-KR');
+
+  // 일별 집계
+  const dateMap = {};
+  myInstalls.forEach(r => {
+    const d = String(r.install_time).slice(0, 10);
+    if (!d || d.length < 10) return;
+    if (!dateMap[d]) dateMap[d] = { join: 0, play: 0, rake: 0 };
+    dateMap[d].join++;
+    if (playGSNs.has(String(r.customer_user_id))) dateMap[d].play++;
+  });
+  myRake.forEach(r => {
+    const d = String(r.date).slice(0, 10);
+    if (!d || d.length < 10) return;
+    if (!dateMap[d]) dateMap[d] = { join: 0, play: 0, rake: 0 };
+    dateMap[d].rake += (parseFloat(r.rake_amount) || 0) * shareRate;
+  });
+
+  const sortedDates = Object.keys(dateMap).sort();
+  const xLabels  = sortedDates.map(d => d.slice(5));
+  const joinVals = sortedDates.map(d => dateMap[d].join);
+  const playVals = sortedDates.map(d => dateMap[d].play);
+  const rakeVals = sortedDates.map(d => Math.round(dateMap[d].rake));
+
+  const gridColor = 'rgba(255,255,255,0.05)';
+  const tickColor = '#7a7f8e';
+
+  if (joinChartObj) joinChartObj.destroy();
+  joinChartObj = new Chart($('joinChart'), {
+    type: 'bar',
+    data: {
+      labels: xLabels,
+      datasets: [
+        { label: '신규 가입', data: joinVals, backgroundColor: '#3b8eff', borderRadius: 4 },
+        { label: '플레이',   data: playVals, backgroundColor: '#00e5a0', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tickColor, font: { size: 11 }, autoSkip: true, maxRotation: 45 }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor } }
+      }
+    }
+  });
+
+  if (rakeChartObj) rakeChartObj.destroy();
+  rakeChartObj = new Chart($('rakeChart'), {
+    type: 'line',
+    data: {
+      labels: xLabels,
+      datasets: [{
+        label: '내 수익',
+        data: rakeVals,
+        borderColor: '#00e5a0',
+        backgroundColor: 'rgba(0,229,160,0.07)',
+        fill: true, tension: 0.4, pointRadius: 3,
+        pointBackgroundColor: '#00e5a0'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tickColor, font: { size: 11 }, autoSkip: true, maxRotation: 45 }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 11 }, callback: v => v.toLocaleString() + '원' }, grid: { color: gridColor } }
+      }
+    }
+  });
+
+  const platforms = {};
+  myInstalls.forEach(r => { const p = r.platform || 'unknown'; platforms[p] = (platforms[p] || 0) + 1; });
+  const platLabels = Object.keys(platforms);
+  const platVals   = platLabels.map(k => platforms[k]);
+  const platColors = ['#3b8eff', '#00e5a0', '#888780', '#f59e0b', '#a78bfa'];
+  const total = platVals.reduce((a, b) => a + b, 0) || 1;
+
+  if (platformChartObj) platformChartObj.destroy();
+  platformChartObj = new Chart($('platformChart'), {
+    type: 'doughnut',
+    data: {
+      labels: platLabels,
+      datasets: [{ data: platVals, backgroundColor: platColors.slice(0, platLabels.length), borderWidth: 0 }]
+    },
+    options: { responsive: false, cutout: '68%', plugins: { legend: { display: false } } }
+  });
+
+  $('platformLegend').innerHTML = platLabels.map((l, i) => `
+    <div class="platform-legend-item">
+      <div class="platform-dot" style="background:${platColors[i]};"></div>
+      <span class="platform-name">${l}</span>
+      <span class="platform-val">${platVals[i].toLocaleString()}명 (${Math.round(platVals[i] / total * 100)}%)</span>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
