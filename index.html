@@ -534,7 +534,7 @@ function renderAdmin(){
   const totalRake=myRake.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
   const totalSales=myRake.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
   const playRate=totalJoin>0?((totalPlay/totalJoin)*100).toFixed(1):'0.0';
-  const joinRate=totalClick>0?((totalJoin/(totalClick+totalJoin))*100).toFixed(1):'0.0';
+  const joinRate=totalClick>0?((totalJoin/totalClick)*100).toFixed(1):'0.0';
 
   // 인플루언서별 수익 쉐어 합산
   const totalShare=allInfluencers
