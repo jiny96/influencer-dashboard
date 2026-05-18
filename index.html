@@ -532,7 +532,7 @@ function renderAdmin(){
   const totalJoin=joinGSNs.size;
   const totalPlay=playGSNs.size;
   const totalRake=myRake.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
-  const totalSales=myRake.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
+  const totalSales=myRake.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0);
   const playRate=totalJoin>0?((totalPlay/totalJoin)*100).toFixed(1):'0.0';
   const joinRate=totalClick>0?((totalJoin/totalClick)*100).toFixed(1):'0.0';
 
@@ -570,7 +570,7 @@ function renderAdmin(){
     if(parseAmount(r.rake_amount)>0&&allInstalls.some(i=>String(i.gsn)===String(r.gsn)&&targetInfs.includes(String(i.af_sub1).trim())))
       dateMap[d].play.add(String(r.gsn));
     dateMap[d].rake+=parseAmount(r.rake_amount)/10000;
-    dateMap[d].sales+=parseAmount(r.sales_amount||0)/10000;
+    dateMap[d].sales+=parseAmount(r.sales_amount||0);
   });
 
   const sortedDates=Object.keys(dateMap).sort();
@@ -628,7 +628,7 @@ function renderAdmin(){
     const infJoin=new Set(infInst.filter(r=>r.gsn&&r.gsn.trim()!=='').map(r=>String(r.gsn))).size;
     const infPlay=new Set(infRakeRows.filter(r=>parseAmount(r.rake_amount)>0).map(r=>String(r.gsn)).filter(g=>infInst.some(i=>String(i.gsn)===g))).size;
     const infRake=infRakeRows.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
-    const infSales=infRakeRows.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
+    const infSales=infRakeRows.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0);
     const infShare=infRake*(parseFloat(inf.share_rate)||0.2);
     return {name:inf.name||inf.influencer_id,click:infClick,join:infJoin,play:infPlay,rake:infRake,sales:infSales,share:infShare};
   });
