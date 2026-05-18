@@ -209,10 +209,15 @@
       </div>
 
       <div class="metrics">
+        <div class="metric-card">
+          <div class="metric-lbl">링크 클릭</div>
+          <div class="metric-val" id="amClick">—</div>
+          <div class="metric-sub">회</div>
+        </div>
         <div class="metric-card blue">
           <div class="metric-lbl">신규 가입</div>
           <div class="metric-val" id="amJoin">—</div>
-          <div class="metric-sub">명 유입</div>
+          <div class="metric-sub" id="amJoinRate">클릭 대비 —%</div>
         </div>
         <div class="metric-card">
           <div class="metric-lbl">실제 플레이</div>
@@ -276,6 +281,7 @@
             <thead>
               <tr style="border-bottom:1px solid var(--border2);">
                 <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;">인플루언서</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">클릭</th>
                 <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">신규 가입</th>
                 <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">플레이</th>
                 <th style="padding:10px 12px;text-align:right;color:var(--muted);font-weight:500;">레이크</th>
@@ -508,7 +514,9 @@ function renderAdmin(){
     const d=parseDateTime(r.install_time);
     return targetInfs.includes(String(r.af_sub1).trim())&&d>=from&&d<=to;
   });
-  const joinGSNs=new Set(myInstalls.map(r=>String(r.gsn)));
+  const clickRows=myInstalls.filter(r=>!r.gsn||r.gsn.trim()==='');
+  const joinRows=myInstalls.filter(r=>r.gsn&&r.gsn.trim()!=='');
+  const joinGSNs=new Set(joinRows.map(r=>String(r.gsn)));
 
   const myRake=allRake.filter(r=>{
     const d=parseDateTime(r.date);
@@ -520,11 +528,13 @@ function renderAdmin(){
           .filter(g=>allInstalls.some(i=>String(i.gsn)===g&&targetInfs.includes(String(i.af_sub1).trim())))
   );
 
+  const totalClick=clickRows.length;
   const totalJoin=joinGSNs.size;
   const totalPlay=playGSNs.size;
   const totalRake=myRake.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
   const totalSales=myRake.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
   const playRate=totalJoin>0?((totalPlay/totalJoin)*100).toFixed(1):'0.0';
+  const joinRate=totalClick>0?((totalJoin/(totalClick+totalJoin))*100).toFixed(1):'0.0';
 
   // 인플루언서별 수익 쉐어 합산
   const totalShare=allInfluencers
@@ -535,7 +545,9 @@ function renderAdmin(){
       return sum+infRake*(parseFloat(inf.share_rate)||0.2);
     },0);
 
+  $('amClick').textContent=fmtNum(totalClick);
   $('amJoin').textContent=fmtNum(totalJoin);
+  $('amJoinRate').textContent=`클릭 대비 ${joinRate}%`;
   $('amPlay').textContent=fmtNum(totalPlay);
   $('amPlayRate').textContent=`가입 대비 ${playRate}%`;
   $('amRake').textContent=fmtNum(totalRake);
@@ -612,17 +624,19 @@ function renderAdmin(){
   const infPerf=allInfluencers.filter(r=>r.role!=='admin').map(inf=>{
     const infInst=allInstalls.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.install_time)>=from&&parseDateTime(r.install_time)<=to);
     const infRakeRows=allRake.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.date)>=from&&parseDateTime(r.date)<=to);
-    const infJoin=new Set(infInst.map(r=>String(r.gsn))).size;
+    const infClick=infInst.filter(r=>!r.gsn||r.gsn.trim()==='').length;
+    const infJoin=new Set(infInst.filter(r=>r.gsn&&r.gsn.trim()!=='').map(r=>String(r.gsn))).size;
     const infPlay=new Set(infRakeRows.filter(r=>parseAmount(r.rake_amount)>0).map(r=>String(r.gsn)).filter(g=>infInst.some(i=>String(i.gsn)===g))).size;
     const infRake=infRakeRows.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
     const infSales=infRakeRows.reduce((s,r)=>s+parseAmount(r.sales_amount||0),0)/10000;
     const infShare=infRake*(parseFloat(inf.share_rate)||0.2);
-    return {name:inf.name||inf.influencer_id,join:infJoin,play:infPlay,rake:infRake,sales:infSales,share:infShare};
+    return {name:inf.name||inf.influencer_id,click:infClick,join:infJoin,play:infPlay,rake:infRake,sales:infSales,share:infShare};
   });
 
   $('infPerfTable').innerHTML=infPerf.map(r=>`
     <tr>
       <td style="padding:10px 12px;color:var(--text);font-weight:500;">${r.name}</td>
+      <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.click)}</td>
       <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.join)}</td>
       <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.play)}</td>
       <td style="padding:10px 12px;text-align:right;color:var(--text);">${fmtNum(r.rake)}</td>
