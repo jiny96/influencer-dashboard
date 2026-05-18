@@ -1,3 +1,4 @@
-influencer_id,password,name,share_rate
-influencer_001,pass123,홍길동,0.2
-influencer_002,pass456,김유튜브,0.2
+influencer_id,password,name,share_rate,role
+influencer_001,pass123,홍길동,0.2,influencer
+influencer_002,pass456,김유튜브,0.2,influencer
+admin,admin123,관리자,0,admin
