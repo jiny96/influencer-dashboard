@@ -184,11 +184,11 @@
 
       <div class="chart-card">
         <div class="chart-title">플랫폼별 가입 비율</div>
-        <div class="platform-wrap">
-          <div class="donut-wrap">
+        <div style="display:flex; align-items:center; gap:2rem; flex-wrap:wrap;">
+          <div style="position:relative; height:160px; width:160px; flex-shrink:0;">
             <canvas id="platformChart" role="img" aria-label="플랫폼별 가입 비율"></canvas>
           </div>
-          <div class="platform-legend" id="platformLegend"></div>
+          <div id="platformLegend" style="display:flex; flex-direction:column; gap:10px; font-size:13px; min-width:160px;"></div>
         </div>
       </div>
 
@@ -224,9 +224,10 @@ function setLoading(v, msg) {
 function parseCSV(text) {
   const lines = text.trim().split('\n').map(l => l.replace(/\r/g, ''));
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const sep = lines[0].includes('\t') ? '\t' : ',';
+  const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
   return lines.slice(1).map(line => {
-    const vals = line.split(',');
+    const vals = line.split(sep);
     const obj = {};
     headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
     return obj;
@@ -405,8 +406,11 @@ function renderDash() {
   const platColors = ['#3b8eff', '#00e5a0', '#888780', '#f59e0b', '#a78bfa'];
   const total = platVals.reduce((a, b) => a + b, 0) || 1;
 
+  const platCanvas = $('platformChart');
+  platCanvas.width  = 160;
+  platCanvas.height = 160;
   if (platformChartObj) platformChartObj.destroy();
-  platformChartObj = new Chart($('platformChart'), {
+  platformChartObj = new Chart(platCanvas, {
     type: 'doughnut',
     data: {
       labels: platLabels,
@@ -416,10 +420,10 @@ function renderDash() {
   });
 
   $('platformLegend').innerHTML = platLabels.map((l, i) => `
-    <div class="platform-legend-item">
-      <div class="platform-dot" style="background:${platColors[i]};"></div>
-      <span class="platform-name">${l}</span>
-      <span class="platform-val">${platVals[i].toLocaleString()}명 (${Math.round(platVals[i] / total * 100)}%)</span>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div style="width:10px; height:10px; border-radius:3px; background:${platColors[i]}; flex-shrink:0;"></div>
+      <span style="color:var(--muted);">${l}</span>
+      <span style="color:var(--text); font-weight:500; margin-left:auto; padding-left:12px;">${platVals[i].toLocaleString()}명 (${Math.round(platVals[i] / total * 100)}%)</span>
     </div>
   `).join('');
 }
