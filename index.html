@@ -204,19 +204,17 @@ const GITHUB_REPO = 'influencer-dashboard';
 const RAW = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main`;
 
 let SESSION = null;
-let allInfluencers = [], allRake = [];
+let allInfluencers = [], allInstalls = [], allRake = [];
 let joinChartObj, rakeChartObj, platformChartObj;
 
+// 날짜 파싱: yyyymmdd 또는 "2026-04-14 0:24:57" 등 모두 지원
 function parseDateTime(s) {
   s = String(s).trim();
-  if (s.length === 14) {
+  if (/^\d{8}$/.test(s)) {
     return new Date(
       parseInt(s.slice(0,4)),
       parseInt(s.slice(4,6)) - 1,
-      parseInt(s.slice(6,8)),
-      parseInt(s.slice(8,10)),
-      parseInt(s.slice(10,12)),
-      parseInt(s.slice(12,14))
+      parseInt(s.slice(6,8))
     );
   }
   return new Date(s);
@@ -260,11 +258,13 @@ async function fetchCSV(filename) {
 }
 
 async function loadAllData() {
-  const [inf, rake] = await Promise.all([
+  const [inf, inst, rake] = await Promise.all([
     fetchCSV('influencers.csv'),
+    fetchCSV('installs.csv'),
     fetchCSV('rake.csv')
   ]);
   allInfluencers = inf;
+  allInstalls    = inst;
   allRake        = rake;
 }
 
@@ -287,7 +287,7 @@ async function doLogin() {
   }
 }
 
-function doLogout() { SESSION = null; allRake = []; showLogin(); }
+function doLogout() { SESSION = null; allInstalls = []; allRake = []; showLogin(); }
 
 function fmt(d) { return d.toISOString().slice(0, 10); }
 
@@ -321,20 +321,32 @@ function renderDash() {
   const infId     = SESSION.influencer_id;
   const shareRate = parseFloat(SESSION.share_rate) || 0.2;
 
-  // rake.csv: gsn, 가입일, 레이크, af_sub1
+  // installs: gsn, install_time, af_sub1, platform → 신규 가입 (날짜 필터)
+  const myInstalls = allInstalls.filter(r => {
+    const d = parseDateTime(r.install_time);
+    return String(r.af_sub1).trim() === infId && d >= from && d <= to;
+  });
+  const joinGSNs = new Set(myInstalls.map(r => String(r.gsn)));
+
+  // rake: gsn, date, rake_amount, af_sub1 → 레이크 (날짜 필터)
   const myRake = allRake.filter(r => {
-    const d = parseDateTime(r['가입일']);
+    const d = parseDateTime(r.date);
     return String(r.af_sub1).trim() === infId && d >= from && d <= to;
   });
 
-  // 유니크 GSN = 신규 가입자
-  const allGSNs  = new Set(myRake.map(r => String(r.gsn)));
-  // 레이크 > 0인 GSN = 실제 플레이어
-  const playGSNs = new Set(myRake.filter(r => parseAmount(r['레이크']) > 0).map(r => String(r.gsn)));
+  // 플레이 = rake에서 레이크 > 0인 GSN (installs에 있는 GSN만)
+  const playGSNs = new Set(
+    myRake.filter(r => parseAmount(r.rake_amount) > 0)
+          .map(r => String(r.gsn))
+          .filter(g => {
+            // installs 전체 기간에서 이 인플루언서 소속인지 확인
+            return allInstalls.some(i => String(i.gsn) === g && String(i.af_sub1).trim() === infId);
+          })
+  );
 
-  const totalJoin = allGSNs.size;
+  const totalJoin = joinGSNs.size;
   const totalPlay = playGSNs.size;
-  const totalRake = myRake.reduce((s, r) => s + parseAmount(r['레이크']), 0);
+  const totalRake = myRake.reduce((s, r) => s + parseAmount(r.rake_amount), 0);
   const myShare   = totalRake * shareRate;
   const playRate  = totalJoin > 0 ? ((totalPlay / totalJoin) * 100).toFixed(1) : '0.0';
 
@@ -347,13 +359,25 @@ function renderDash() {
 
   // 일별 집계
   const dateMap = {};
-  myRake.forEach(r => {
-    const dt = parseDateTime(r['가입일']);
+
+  // 가입 - install_time 기준
+  myInstalls.forEach(r => {
+    const dt = parseDateTime(r.install_time);
     const d  = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
     if (!dateMap[d]) dateMap[d] = { join: new Set(), play: new Set(), rake: 0 };
     dateMap[d].join.add(String(r.gsn));
-    if (parseAmount(r['레이크']) > 0) dateMap[d].play.add(String(r.gsn));
-    dateMap[d].rake += parseAmount(r['레이크']) * shareRate;
+  });
+
+  // 레이크 - date 기준
+  myRake.forEach(r => {
+    const dt = parseDateTime(r.date);
+    const d  = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if (!dateMap[d]) dateMap[d] = { join: new Set(), play: new Set(), rake: 0 };
+    if (parseAmount(r.rake_amount) > 0 &&
+        allInstalls.some(i => String(i.gsn) === String(r.gsn) && String(i.af_sub1).trim() === infId)) {
+      dateMap[d].play.add(String(r.gsn));
+    }
+    dateMap[d].rake += parseAmount(r.rake_amount) * shareRate;
   });
 
   const sortedDates = Object.keys(dateMap).sort();
@@ -410,7 +434,7 @@ function renderDash() {
   });
 
   const platforms = {};
-  myRake.forEach(r => { const p = r.platform || 'mobile'; platforms[p] = (platforms[p] || 0) + 1; });
+  myInstalls.forEach(r => { const p = r.platform || 'unknown'; platforms[p] = (platforms[p] || 0) + 1; });
   const platLabels = Object.keys(platforms);
   const platVals   = platLabels.map(k => platforms[k]);
   const platColors = ['#3b8eff', '#00e5a0', '#888780', '#f59e0b', '#a78bfa'];
