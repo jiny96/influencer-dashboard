@@ -514,7 +514,7 @@ function renderAdmin(){
     const d=parseDateTime(r.install_time);
     return targetInfs.includes(String(r.af_sub1).trim())&&d>=from&&d<=to;
   });
-  const clickRows=myInstalls.filter(r=>!r.gsn||r.gsn.trim()==='');
+  const clickRows=myInstalls;
   const joinRows=myInstalls.filter(r=>r.gsn&&r.gsn.trim()!=='');
   const joinGSNs=new Set(joinRows.map(r=>String(r.gsn)));
 
@@ -624,7 +624,7 @@ function renderAdmin(){
   const infPerf=allInfluencers.filter(r=>r.role!=='admin').map(inf=>{
     const infInst=allInstalls.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.install_time)>=from&&parseDateTime(r.install_time)<=to);
     const infRakeRows=allRake.filter(r=>String(r.af_sub1).trim()===inf.influencer_id&&parseDateTime(r.date)>=from&&parseDateTime(r.date)<=to);
-    const infClick=infInst.filter(r=>!r.gsn||r.gsn.trim()==='').length;
+    const infClick=infInst.length;
     const infJoin=new Set(infInst.filter(r=>r.gsn&&r.gsn.trim()!=='').map(r=>String(r.gsn))).size;
     const infPlay=new Set(infRakeRows.filter(r=>parseAmount(r.rake_amount)>0).map(r=>String(r.gsn)).filter(g=>infInst.some(i=>String(i.gsn)===g))).size;
     const infRake=infRakeRows.reduce((s,r)=>s+parseAmount(r.rake_amount),0)/10000;
