@@ -346,7 +346,7 @@ function renderDash() {
 
   const totalJoin = joinGSNs.size;
   const totalPlay = playGSNs.size;
-  const totalRake = myRake.reduce((s, r) => s + parseAmount(r.rake_amount), 0);
+  const totalRake = myRake.reduce((s, r) => s + parseAmount(r.rake_amount), 0) / 10000;
   const myShare   = totalRake * shareRate;
   const playRate  = totalJoin > 0 ? ((totalPlay / totalJoin) * 100).toFixed(1) : '0.0';
 
@@ -377,7 +377,7 @@ function renderDash() {
         allInstalls.some(i => String(i.gsn) === String(r.gsn) && String(i.af_sub1).trim() === infId)) {
       dateMap[d].play.add(String(r.gsn));
     }
-    dateMap[d].rake += parseAmount(r.rake_amount) * shareRate;
+    dateMap[d].rake += (parseAmount(r.rake_amount) / 10000) * shareRate;
   });
 
   const sortedDates = Object.keys(dateMap).sort();
